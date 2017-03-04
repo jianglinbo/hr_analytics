@@ -24,7 +24,7 @@ def max_min_normalize(s):
 
 dat = data.drop(['dept', 'salary'], axis=1).apply(lambda x: max_min_normalize(x))
 
-# -------------------- quick viz ----------------
+# -------------------- quick viz ---------------------
 
 # dat.apply(lambda x: sns.distplot(x))
 
@@ -48,6 +48,7 @@ dat_val = dat.iloc[:int(f*N), :]  # first 25% (f%)
 dat = dat.iloc[int(f*N):, :]  # remaining data
 
 #: Let sklearn find stratified splits for us
+#: Shuffle is unnecessary here, since we shuffled above, but whatever
 SKF = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
 k_splits = SKF.split(dat.drop('left', axis=1), dat['left'])
 
@@ -76,6 +77,7 @@ for train_idx, test_idx in k_splits:
 print 'expected accuracy: {}'.format(round(sum(accuracy)/len(accuracy), 3)*100.)
 
 # ------------ up to this point, I can tweak/change model and/or model parameters ----------------
+# ---------- !! no decisions can be based on the results of the validation set !! ----------------
 
 # Implement model
 trained_model = RandomForestClassifier().fit(dat.drop('left', axis=1), dat['left'])
