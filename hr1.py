@@ -3,8 +3,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import StratifiedKFold
-
-
 from sklearn.ensemble import RandomForestClassifier
 
 
@@ -22,7 +20,7 @@ data['salary_map'] = data['salary'].map(salary_dict)
 
 
 def max_min_normalize(s):
-    return s/float(max(s) - min(s))
+    return s/(float(max(s)) - float(min(s)))
 
 dat = data.drop(['dept', 'salary'], axis=1).apply(lambda x: max_min_normalize(x))
 
