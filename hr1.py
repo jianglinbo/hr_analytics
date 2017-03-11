@@ -1,5 +1,6 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
+import random
 
 from pandas import DataFrame, Series, read_csv, set_option
 from numpy import array, sqrt
