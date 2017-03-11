@@ -1,22 +1,23 @@
-import pandas as pd
-import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-import random
+
+from pandas import DataFrame, Series, read_csv, set_option
+from numpy import array, sqrt
+from random import seed, shuffle
 
 from sklearn.model_selection import StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
 
 
 # Want reproducible results
-random.seed(0)
+seed(0)
 
 # Force the console output to be wider
-pd.set_option('display.width', 180)
+set_option('display.width', 180)
 
 # -------------------- pre-processing ----------------
 
-data = pd.read_csv('hr_data.csv')
+data = read_csv('hr_data.csv')
 
 data = data.rename(columns={'sales': 'dept'})
 
@@ -87,7 +88,7 @@ def standardize(s, mean_s=None, var_s=None):
     if var_s is None:
         var_s = calc_var(s)
 
-    s_ = (s-mean_s)/np.sqrt(var_s)
+    s_ = (s-mean_s)/sqrt(var_s)
     return s_, mean_s, var_s
 
 
@@ -99,7 +100,7 @@ def build_standardize(df, categoricals, params=None):
 
     if params is None:
         params = {}
-        df_norm = pd.DataFrame(columns=df.columns)
+        df_norm = DataFrame(columns=df.columns)
         # Iterate across columns
         for lab, col in df.iteritems():
             col_, col_mean, col_var = standardize(col)
@@ -107,7 +108,7 @@ def build_standardize(df, categoricals, params=None):
             df_norm[lab] = col_
 
     else:
-        df_norm = pd.DataFrame(columns=df.columns)
+        df_norm = DataFrame(columns=df.columns)
         # Iterate across columns
         for lab, col in df.iteritems():
             col_, col_mean, col_var = standardize(col, params[lab]['mean'], params[lab]['var'])
@@ -134,8 +135,8 @@ print 'standardized average_monthly_hours s.d.: {}'.format(dat['average_monthly_
 # to the validation set when we're ready.
 
 # shuffle
-idx = np.array(data.index)
-random.shuffle(idx)
+idx = array(data.index)
+shuffle(idx)
 dat = data.ix[idx].reset_index(drop=True)
 
 f = 0.25
@@ -186,7 +187,7 @@ dat_val_, _ = build_standardize(dat_val, cat_cols, params)
 model = RandomForestClassifier().fit(dat_.drop('left', axis=1), dat_['left'])
 
 # feats = [(f, i) for i, f in zip(model.feature_importances_, dat_.drop('left', axis=1).columns)]
-feats = pd.Series(data=model.feature_importances_, index=dat_.drop('left', axis=1).columns, name='importance')
+feats = Series(data=model.feature_importances_, index=dat_.drop('left', axis=1).columns, name='importance')
 
 # run predictions on validation step
 y = dat_val_['left']
