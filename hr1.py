@@ -1,5 +1,10 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
+import random
+
+from pandas import DataFrame, Series, read_csv, set_option
+from numpy import array, sqrt
+from random import seed, shuffle
 
 from pandas import DataFrame, Series, read_csv, set_option
 from numpy import array, sqrt
@@ -69,6 +74,7 @@ def max_min_scale(s):
     return s/float(max(s) - min(s))
 
 # dat = data.apply(lambda x: max_min_scale(x))
+
 
 def calc_mean(s):
     return sum(s)/float(len(s))
