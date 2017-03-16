@@ -20,18 +20,28 @@ seed(0)
 # Force the console output to be wider
 set_option('display.width', 180)
 
-# -------------------- pre-processing ----------------
-
+# Read in data
 data = read_csv('hr_data.csv')
 
-data = data.rename(columns={'sales': 'dept'})
+# -------------------- pre-processing ----------------
 
-salary_dict = {'low': 0, 'medium': 1, 'high': 2}
 
-data['salary_map'] = data['salary'].map(salary_dict)
+def hr_pre_process(dat, drop_cols=['salary', 'dept']):
+    dat = dat.rename(columns={'sales': 'dept'})
 
-# Just to make life easier
-data = data.drop(['salary', 'dept'], axis=1)
+    salary_dict = {'low': 0, 'medium': 1, 'high': 2}
+
+    dat['salary_map'] = dat['salary'].map(salary_dict)
+
+    for col in drop_cols:
+        dat.drop(col, axis=1, inplace=True)
+
+    # Quick cleaning
+    dat = dat.rename(columns={'promotion_last_5years': 'promotion', 'Work_accident': 'work_accident',
+                                'average_montly_hours': 'average_monthly_hours',
+                                'number_project': 'number_projects'})
+
+    return dat
 
 # For expository purposes, I am leaving everything explicitly defined in this file.
 # These functions should be moved to a general purpose utility folder
@@ -58,12 +68,6 @@ data = data.drop(['salary', 'dept'], axis=1)
 #   number_project (#; ~normal)
 #   last_evaluation (0.-1.; ~uniform?)
 #   satisfaction_level (0.-1.; ~uniform?)
-
-# Quick cleaning
-
-data = data.rename(columns={'promotion_last_5years': 'promotion', 'Work_accident': 'work_accident',
-                            'average_montly_hours': 'average_monthly_hours',
-                            'number_project': 'number_projects'})
 
 cat_cols = ['salary_map', 'promotion', 'left', 'work_accident'] # define for later use
 
@@ -123,9 +127,9 @@ def build_standardize(df, categoricals, params=None):
     return df_norm, params
 
 # What did standardization do?
-dat, _ = build_standardize(data, cat_cols)
+dat, _ = build_standardize(hr_pre_process(data), cat_cols)
 # non-standardized (std = standard deviation)
-print 'non-standardized average_monthly_hours s.d.: {}'.format(data['average_monthly_hours'].std())
+print 'non-standardized average_monthly_hours s.d.: {}'.format(dat['average_monthly_hours'].std())
 # standardized
 print 'standardized average_monthly_hours s.d.: {}'.format(dat['average_monthly_hours'].std())
 
@@ -149,7 +153,7 @@ N = len(dat)
 # validation set
 dat_val = dat.iloc[:int(f*N), :].reset_index(drop=True)  # first 25% (f%)
 # training set
-dat = dat.iloc[int(f*N):, :].reset_index(drop=True)  # remaining data
+dat = hr_pre_process(dat.iloc[int(f*N):, :].reset_index(drop=True))  # remaining data
 
 #: Let sklearn find stratified splits for us
 #: Shuffle is unnecessary here, since we shuffled above, but whatever
@@ -188,7 +192,7 @@ print 'Average training accuracy: {}%'.format(round(sum(accuracy)/len(accuracy),
 
 # re-parameterize with entire training set
 dat_, params = build_standardize(dat, cat_cols)
-dat_val_, _ = build_standardize(dat_val, cat_cols, params)
+dat_val_, _ = build_standardize(hr_pre_process(dat_val), cat_cols, params)
 
 init_weights = dat_['left'].value_counts().to_dict()
 
@@ -206,3 +210,25 @@ gen_acc = sum(y==y_pred)/float(len(y))
 gen_err = 1. - gen_acc
 
 print 'Expected generalization accuracy: {a}%  (error: {e}%)'.format(a=round(gen_acc, 3)*100., e=round(gen_err, 3)*100.)
+
+# Insights #
+
+# Join predictions back in
+dat_val = hr_pre_process(dat_val, drop_cols=['salary'])
+dat_val['pred'] = y_pred
+
+print 'Expected number of people leaving: {}'.format(dat_val['pred'].sum())
+print 'Expected fraction of employees leaving: {}'.format(dat_val['pred'].sum()/float(len(dat_val['pred'])))
+
+# Department with highest turnover rates
+loss = dat_val.groupby('dept').apply(lambda x: x['pred'].sum()/float(len(x['pred']))).sort_values(ascending=False)
+
+dat_val['promotion'].value_counts()
+
+# Anything interesting here?
+d = dat_val.groupby('pred').mean()
+
+# that's a little too course. let's look at these numbers broken out by department
+dat_val.groupby(['dept', 'pred']).mean().unstack('pred')
+
+dat_val.groupby(['time_spend_company', 'promotion'])['pred'].mean().unstack('promotion')
