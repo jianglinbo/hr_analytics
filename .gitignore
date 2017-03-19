@@ -1,2 +1,5 @@
 # Ignore Pycharm structure
 .idea/
+
+# dont track the checkpoints
+.ipynb_checkpoints/
