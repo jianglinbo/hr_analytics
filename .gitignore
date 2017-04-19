@@ -3,3 +3,5 @@
 
 # dont track the checkpoints
 .ipynb_checkpoints/
+
+*.pyc
