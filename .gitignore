@@ -7,3 +7,4 @@
 # connection information
 conn_strings.py
 conn_strings.pyc
+*.pyc
