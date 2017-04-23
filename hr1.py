@@ -5,6 +5,7 @@ from random import seed, shuffle
 from sklearn.model_selection import StratifiedKFold
 from sklearn.ensemble import RandomForestClassifier
 
+from utils import load_data
 
 # Want reproducible results
 seed(0)
@@ -13,7 +14,8 @@ seed(0)
 set_option('display.width', 180)
 
 # Read in data
-data = read_csv('hr_data.csv')
+# data = read_csv('hr_data.csv')
+data = load_data()
 
 # -------------------- pre-processing ----------------
 
