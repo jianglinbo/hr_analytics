@@ -81,7 +81,7 @@ def calc_var(s):
     return sum((s-mean_s)**2)/float(len(s))
 
 
-# Standardize data
+# Standardize data - this is the z-score
 def standardize(s, mean_s=None, var_s=None):
     if mean_s is None:
         mean_s = calc_mean(s)
@@ -93,7 +93,7 @@ def standardize(s, mean_s=None, var_s=None):
     return s_, mean_s, var_s
 
 
-def build_standardize(df, categoricals, params=None):
+def build_standardize(df, categoricals, params=None): # params e.g. variance, sd, mean. you want to calculate params for training data. you don't want it to do that for testing data.
     # Don't normalize categorical variables
     # Pull them out, hold them aside before processing
     df_hold = df[categoricals]
@@ -104,7 +104,7 @@ def build_standardize(df, categoricals, params=None):
         df_norm = DataFrame(columns=df.columns)
         # Iterate across columns
         for lab, col in df.iteritems():
-            col_, col_mean, col_var = standardize(col)
+            col_, col_mean, col_var = standardize(col) # calculating mean and variance and saving them bc need to later apply them to testing data. each feature gets its own mean/variance
             params[lab] = {'mean': col_mean, 'var': col_var}
             df_norm[lab] = col_
 
@@ -147,6 +147,7 @@ dat_val = dat.iloc[:int(f*N), :].reset_index(drop=True)  # first 25% (f%)
 # training set
 dat = hr_pre_process(dat.iloc[int(f*N):, :].reset_index(drop=True))  # remaining data
 
+
 #: Let sklearn find stratified splits for us
 #: Shuffle is unnecessary here, since we shuffled above, but whatever
 SKF = StratifiedKFold(n_splits=5, shuffle=True, random_state=0)
@@ -160,7 +161,7 @@ for train_idx, test_idx in k_splits:
     train = dat.iloc[train_idx, :]  # pull out training data
     test = dat.iloc[test_idx, :]  # pull out testing data
 
-    train_, params = build_standardize(train, cat_cols)
+    train_, params = build_standardize(train, cat_cols) # the data is standardized
     test_, _ = build_standardize(test, cat_cols, params)
 
     init_weights = train['left'].value_counts().to_dict()
@@ -224,3 +225,7 @@ d = dat_val.groupby('pred').mean()
 dat_val.groupby(['dept', 'pred']).mean().unstack('pred')
 
 dat_val.groupby(['time_spend_company', 'promotion'])['pred'].mean().unstack('promotion')
+
+
+
+
