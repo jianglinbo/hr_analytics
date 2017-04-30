@@ -9,33 +9,22 @@ import pandas as pd
 
 conn = create_engine(conn_string)
 
+
 # loading the data from the csv
 def _load_from_file():
     data = read_csv('hr_data.csv')
     return data
 
+
 # pushes the df to the database
 def _load_to_db(df):
     df.to_sql(name='kaggle_source', con=conn, if_exists='replace', chunksize=5000)
+
 
 # pulls data from the database.
 def load_data():
     data = read_sql('select * from kaggle_source',conn)
     return data
-
-# data already loaded
-
-# print 'reading from file...'
-# df = _load_from_file()
-# print 'pushing data to db...'
-# _load_to_db(df)
-# print 'loading data from db...'
-# data = load_data()
-# print 'done'
-#
-
-
-# once data is loaded in the database, we will get rid of functions to load from file and load to db, and just use load data.
 
 
 def hr_pre_process(dat, drop_cols=['salary', 'dept']):
@@ -54,7 +43,6 @@ def hr_pre_process(dat, drop_cols=['salary', 'dept']):
                                 'number_project': 'number_projects'})
 
     return dat
-
 
 
 def max_min_scale(s):
@@ -84,8 +72,9 @@ def standardize(s, mean_s=None, var_s=None):
     return s_, mean_s, var_s
 
 
-
-def build_standardize(df, categoricals, params=None): # params e.g. variance, sd, mean. you want to calculate params for training data. you don't want it to do that for testing data.
+# params e.g. variance, sd, mean. you want to calculate params for training data.
+# you don't want it to do that for testing data.
+def build_standardize(df, categoricals, params=None):
     # Don't normalize categorical variables
     # Pull them out, hold them aside before processing
     df_hold = df[categoricals]
@@ -96,7 +85,9 @@ def build_standardize(df, categoricals, params=None): # params e.g. variance, sd
         df_norm = pd.DataFrame(columns=df.columns)
         # Iterate across columns
         for lab, col in df.iteritems():
-            col_, col_mean, col_var = standardize(col) # calculating mean and variance and saving them bc need to later apply them to testing data. each feature gets its own mean/variance
+            # calculating mean and variance and saving them bc need to later apply them to testing data.
+            # each feature gets its own mean/variance
+            col_, col_mean, col_var = standardize(col)
             params[lab] = {'mean': col_mean, 'var': col_var}
             df_norm[lab] = col_
 
